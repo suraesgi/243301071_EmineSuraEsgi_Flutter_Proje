@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'detail_screen.dart';
+import 'profile_screen.dart';
 
 class AnaEkran extends StatelessWidget {
   const AnaEkran({super.key});
@@ -15,7 +16,10 @@ class AnaEkran extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              print("LOG: Profil ekranına gidiliyor.");
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilEkrani()),
+              );
             },
           ),
         ],

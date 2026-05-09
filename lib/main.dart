@@ -1,25 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login_screen.dart'; 
 
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-String secilenRol = "Müşteri";
-void main() {
-  runApp(const HobiBahcesiApp());
+  await Supabase.initialize(
+    url: 'https://uzkdmdkswrdoantrneep.supabase.co',
+    anonKey: 'sb_publishable_DguJNCUJnf3bCd_Rngf4wg_q6wkQ0Sw',
+  );
+
+  runApp(const MyApp());
 }
 
-class HobiBahcesiApp extends StatelessWidget {
-  const HobiBahcesiApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Hobi Bahçesi Uygulaması',
       debugShowCheckedModeBanner: false,
-      title: 'Hobi Bahçesi Kiralama ve Hizmet Sistemi',
       theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
         primarySwatch: Colors.green,
+        useMaterial3: true,
       ),
-      home: GirisEkrani(), 
+
+      home: const GirisEkrani(), 
     );
   }
 }
