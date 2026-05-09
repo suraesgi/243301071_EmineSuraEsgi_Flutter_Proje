@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'detail_screen.dart';
 
 class AnaEkran extends StatelessWidget {
   const AnaEkran({super.key});
@@ -31,7 +32,13 @@ class AnaEkran extends StatelessWidget {
               subtitle: Text("Konya / Meram\nAylık: ${500 + (index * 100)} TL"),
               trailing: const Icon(Icons.arrow_forward_ios, size: 18),
               onTap: () {
-                print("LOG: ${index + 1} numaralı bahçe detayına tıklandı.");
+                print("LOG: ${index + 1} numaralı bahçe detayına gidiliyor.");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetayEkrani(bahceAdi: "${index + 1} Numaralı Hobi Bahçesi"),
+                  ),
+                );
               },
             ),
           );

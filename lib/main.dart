@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart'; 
 
+
+String secilenRol = "Müşteri";
 void main() {
   runApp(const HobiBahcesiApp());
 }
@@ -12,12 +14,12 @@ class HobiBahcesiApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Hobi Bahçesi Kiralama',
+      title: 'Hobi Bahçesi Kiralama ve Hizmet Sistemi',
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
         primarySwatch: Colors.green,
       ),
-      home: const GirisEkrani(), 
+      home: GirisEkrani(), 
     );
   }
 }
