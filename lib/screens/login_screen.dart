@@ -1,26 +1,6 @@
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
-
-void main() {
-  runApp(const HobiBahcesiApp());
-}
-
-class HobiBahcesiApp extends StatelessWidget {
-  const HobiBahcesiApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Hobi Bahçesi Kiralama ve Hizmet Sistemi',
-      theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
-        primarySwatch: Colors.green,
-      ),
-      home: const GirisEkrani(),
-    );
-  }
-}
+import 'home_screen.dart';
 
 class GirisEkrani extends StatelessWidget {
   const GirisEkrani({super.key});
@@ -34,7 +14,7 @@ class GirisEkrani extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              "Hobi Bahçesi Kiralama ve Hizmet Sistemi",
+              "Hobi Bahçesi Sistemi",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -44,9 +24,9 @@ class GirisEkrani extends StatelessWidget {
             const SizedBox(height: 30),
             const TextField(
               decoration: InputDecoration(
-                labelText: 'E-posta',
+                labelText: 'E-posta veya Öğrenci No',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email), 
+                prefixIcon: Icon(Icons.person),
               ),
             ),
             const SizedBox(height: 15),
@@ -59,9 +39,14 @@ class GirisEkrani extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 25),
+            
             ElevatedButton(
               onPressed: () {
-                print("LOG: Giriş yap butonuna basıldı.");
+                print("LOG: Giriş başarılı, Bahçe Listesine gidiliyor.");
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AnaEkran()),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
@@ -73,16 +58,21 @@ class GirisEkrani extends StatelessWidget {
               ),
               child: const Text("Giriş Yap"),
             ),
+            
             const SizedBox(height: 10),
+            
             TextButton(
-              onPressed: (){
+              onPressed: () {
                 print("LOG: Kayıt Ol ekranına yönlendiriliyor.");
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const KayitEkrani()),
                 );
               },
-              child: const Text("Hesabınız yok mu? Kayıt Olun"),
+              child: const Text(
+                "Hesabınız yok mu? Kayıt Olun",
+                style: TextStyle(color: Colors.green),
+              ),
             ),
           ],
         ),
