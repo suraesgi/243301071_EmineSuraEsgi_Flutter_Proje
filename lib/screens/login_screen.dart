@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'register_screen.dart';
+import 'register_screen.dart'; 
 import 'home_screen.dart';
 import 'owner_dashboard_screen.dart';
 
@@ -18,70 +18,79 @@ class _GirisEkraniState extends State<GirisEkrani> {
 
   Future<void> _girisYap() async {
     if (_emailController.text.isEmpty || _sifreController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Lütfen e-posta ve şifrenizi girin!")),
-      );
+      _mesajGoster("Lütfen e-posta ve şifrenizi girin!", Colors.orange);
       return;
     }
 
     setState(() => _yukleniyor = true);
 
     try {
-      // A. Supabase ile kimlik doğrulama
+      // 1. ADIM: Supabase Auth ile Kimlik Doğrulama
       final AuthResponse res = await Supabase.instance.client.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _sifreController.text.trim(),
       );
 
       if (res.user != null) {
-        // B. Kullanıcının rolünü veritabanından sorgula
+        // 2. ADIM: Kullanıcı Verilerini ve Rolü Veritabanından Çek
+        // Kayıt ekranında manuel eklediğimiz 'kullanicilar' tablosuna gidiyoruz.
         final userData = await Supabase.instance.client
             .from('kullanicilar')
-            .select('rol')
+            .select('rol, ad, soyad') 
             .eq('id', res.user!.id)
             .single();
 
         String gelenRol = userData['rol'];
+        String tamAd = "${userData['ad']} ${userData['soyad']}";
 
-        // C. LOG KAYDI TUT
+        // 3. ADIM: Log Kaydı (Ödev Şartı!)
+        // Her girişte veritabanına log düşüyoruz.
         await Supabase.instance.client.from('loglar').insert({
           'kullanici_id': res.user!.id,
-          'islem': "Giriş yapıldı. Rol: $gelenRol",
+          'islem': "Başarılı Giriş yapıldı. Kullanıcı: $tamAd, Rol: $gelenRol",
         });
 
         if (mounted) {
-          // D. Role göre doğru ekrana yönlendir
-          if (gelenRol == "Bahçe Sahibi") {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const SahipPaneli()));
-          } else {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AnaEkran()));
-          }
+          _mesajGoster("Hoş geldiniz, $tamAd", Colors.green);
+          
+          // 4. ADIM: Role Göre Yönlendirme
+          // Navigator.pushReplacement kullanarak geri dönülmesini engelliyoruz.
+          Navigator.pushReplacement(
+            context, 
+            MaterialPageRoute(
+              builder: (context) => gelenRol == "Bahçe Sahibi" 
+                  ? const SahipPaneli() 
+                  : const AnaEkran()
+            )
+          );
         }
       }
     } on AuthException catch (error) {
-      // Supabase'den gelen hataları Türkçeleştirme
-      String mesaj = "Bir hata oluştu";
+      String mesaj = "Giriş başarısız";
       if (error.message.contains("Invalid login credentials")) {
         mesaj = "E-posta veya şifre hatalı!";
-      } else if (error.message.contains("Email not confirmed")) {
-        mesaj = "Lütfen e-posta adresinizi onaylayın!";
       } else {
-        mesaj = error.message;
+        mesaj = "Hata: ${error.message}";
       }
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(mesaj), backgroundColor: Colors.red),
-        );
-      }
+      _mesajGoster(mesaj, Colors.red);
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Beklenmedik bir hata oluştu"), backgroundColor: Colors.red),
-        );
-      }
+      // Eğer kullanıcı Auth'da var ama 'kullanicilar' tablosunda yoksa buraya düşer.
+      _mesajGoster("Kullanıcı profili bulunamadı. Lütfen tekrar kayıt olun.", Colors.red);
+      debugPrint("Giriş Hatası Detayı: $error");
     } finally {
       if (mounted) setState(() => _yukleniyor = false);
+    }
+  }
+
+  void _mesajGoster(String mesaj, Color renk) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(mesaj), 
+          backgroundColor: renk,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -95,63 +104,76 @@ class _GirisEkraniState extends State<GirisEkrani> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: _yukleniyor 
         ? const Center(child: CircularProgressIndicator(color: Colors.green)) 
-        : Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.local_florist, size: 80, color: Colors.green),
-            const SizedBox(height: 20),
-            const Text(
-              "Hobi Bahçesi Sistemi",
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.green),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 30),
+        : Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.local_florist, size: 100, color: Colors.green),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Hobi Bahçesi",
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.green),
+                  ),
+                  const Text(
+                    "Yönetim Sistemine Giriş",
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 40),
 
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'E-posta', 
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email),
+                  TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'E-posta', 
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      prefixIcon: const Icon(Icons.email),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+
+                  TextField(
+                    controller: _sifreController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Şifre', 
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      prefixIcon: const Icon(Icons.lock),
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+
+                  ElevatedButton(
+                    onPressed: _girisYap,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 55),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text("Giriş Yap", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  TextButton(
+                    onPressed: () => Navigator.push(
+                      context, 
+                      MaterialPageRoute(builder: (context) => const KayitEkrani())
+                    ),
+                    child: const Text(
+                      "Hesabınız yok mu? Hemen Kayıt Olun", 
+                      style: TextStyle(color: Colors.green, fontSize: 15, fontWeight: FontWeight.w600)
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: _sifreController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Şifre', 
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock),
-              ),
-            ),
-            const SizedBox(height: 25),
-
-            ElevatedButton(
-              onPressed: _girisYap,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text("Giriş Yap", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-
-            const SizedBox(height: 10),
-
-            TextButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const KayitEkrani())),
-              child: const Text("Hesabınız yok mu? Kayıt Olun", style: TextStyle(color: Colors.green, fontSize: 16)),
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 }
