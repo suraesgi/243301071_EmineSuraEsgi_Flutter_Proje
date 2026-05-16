@@ -48,8 +48,6 @@ class _KayitEkraniState extends State<KayitEkrani> {
     setState(() => _yukleniyor = true);
 
     try {
-      // 1. ADIM: Supabase Auth Kaydı
-      // 'data' alanı tetikleyicinin (Trigger) çalışması için zorunludur.
       final AuthResponse res = await Supabase.instance.client.auth.signUp(
         email: _emailController.text.trim(),
         password: _sifreController.text.trim(),
@@ -58,34 +56,52 @@ class _KayitEkraniState extends State<KayitEkrani> {
           'soyad': _soyadController.text.trim(),
           'rol': _rolGrubu,
           'telefon': _telefonController.text.trim(),
-          'iban': _rolGrubu == "Bahçe Sahibi" ? _ibanController.text.trim() : null,
         },
       );
 
-      if (res.user != null) {
-        // 2. ADIM: Başarı Mesajı ve Giriş Ekranına Yönlendirme
+      final user = res.user;
+
+      if (user != null) {
+        
+        await Supabase.instance.client.from('kullanicilar').insert({
+          'id': user.id, 
+          'ad': _adController.text.trim(),
+          'soyad': _soyadController.text.trim(),
+          'eposta': _emailController.text.trim(),
+          'telefon': _telefonController.text.trim(),
+          'rol': _rolGrubu,
+        });
+
+        if (_rolGrubu == "Bahçe Sahibi") {
+          await Supabase.instance.client.from('sahipler').insert({
+            'kullanici_id': user.id,
+            'iban_no': _ibanController.text.trim(),
+          });
+        }
+
+        await Supabase.instance.client.from('loglar').insert({
+          'kullanici_id': user.id,
+          'islem': "Yeni kullanıcı kaydı oluşturuldu. Rol: $_rolGrubu",
+        });
+
         if (mounted) {
           _mesajGoster("Kayıt Başarılı! Şimdi giriş yapabilirsiniz.", Colors.green);
-          
-          // Kullanıcının mesajı okuması için kısa bir bekleme
           await Future.delayed(const Duration(seconds: 2));
           
           if (mounted) {
-            // Navigator.pop(context) seni doğrudan GİRİŞ EKRANINA geri gönderir.
             Navigator.pop(context); 
           }
         }
       }
     } on AuthException catch (error) {
-      // Kullanıcı zaten varsa doğrudan yönlendirme önerisi sunarız
       if (error.message.contains("already registered")) {
         _mesajGoster("Bu e-posta zaten kayıtlı, lütfen giriş yapın.", Colors.orange);
         Navigator.pop(context);
       } else {
-        _mesajGoster("Hata: ${error.message}", Colors.red);
+        _mesajGoster("Kimlik doğrulama hatası: ${error.message}", Colors.red);
       }
     } catch (error) {
-      _mesajGoster("Beklenmedik bir hata oluştu: $error", Colors.red);
+      _mesajGoster("Veritabanı kaydı sırasında hata oluştu: $error", Colors.red);
     } finally {
       if (mounted) setState(() => _yukleniyor = false);
     }

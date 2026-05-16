@@ -11,7 +11,6 @@ class AnaEkran extends StatefulWidget {
 }
 
 class _AnaEkranState extends State<AnaEkran> {
-  // Giriş yapmış kullanıcının ID'si
   final String _userUID = Supabase.instance.client.auth.currentUser!.id;
 
   @override
@@ -20,7 +19,6 @@ class _AnaEkranState extends State<AnaEkran> {
     _ekranGirisiniLogla();
   }
 
-  // ÖDEV ŞARTI: Ekranın açılışını logluyoruz
   Future<void> _ekranGirisiniLogla() async {
     await Supabase.instance.client.from('loglar').insert({
       'kullanici_id': _userUID,
@@ -28,7 +26,6 @@ class _AnaEkranState extends State<AnaEkran> {
     });
   }
 
-  // Veritabanından bahçeleri çeken fonksiyon
   Future<List<Map<String, dynamic>>> _bahceleriGetir() async {
     try {
       final response = await Supabase.instance.client
@@ -45,6 +42,7 @@ class _AnaEkranState extends State<AnaEkran> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text("Hobi Bahçeleri", style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.green,
@@ -61,10 +59,9 @@ class _AnaEkranState extends State<AnaEkran> {
           ),
         ],
       ),
-      // RefreshIndicator: Listeyi aşağı çekince verileri yeniler
       body: RefreshIndicator(
         onRefresh: () async {
-          setState(() {}); // FutureBuilder'ı tetikler
+          setState(() {}); 
         },
         child: FutureBuilder<List<Map<String, dynamic>>>(
           future: _bahceleriGetir(),
@@ -93,65 +90,94 @@ class _AnaEkranState extends State<AnaEkran> {
                 final String konum = bahce['konum'] ?? "Konya";
                 final String fiyat = bahce['fiyat']?.toString() ?? "0";
                 final String durum = bahce['durum'] ?? "Boş";
+                
+                // --- KRİTİK MANTIK: Bahçe Dolu mu? ---
+                final bool isDolu = durum == "Dolu";
 
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(12),
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: durum == "Boş" ? Colors.green.shade50 : Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.yard_outlined, 
-                        size: 30,
-                        color: durum == "Boş" ? Colors.green : Colors.red,
-                      ),
-                    ),
-                    title: Text(baslik, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 5),
-                      child: Text("$konum\nAylık: $fiyat TL", style: const TextStyle(height: 1.4)),
-                    ),
-                    isThreeLine: true,
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: durum == "Boş" ? Colors.green : Colors.red,
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            durum,
-                            style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
+                return Opacity(
+                  // Eğer doluysa kartı biraz soluklaştırıyoruz (0.7 opaklık)
+                  opacity: isDolu ? 0.7 : 1.0,
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                    elevation: isDolu ? 1 : 4, // Doluysa gölgeyi azaltıyoruz
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(12),
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isDolu ? Colors.grey.shade200 : Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      ],
-                    ),
-                    onTap: () async {
-                      // ÖDEV ŞARTI: Tıklama işlemini logla
-                      await Supabase.instance.client.from('loglar').insert({
-                        'kullanici_id': _userUID,
-                        'islem': "$baslik bahçesinin detaylarına bakıldı.",
-                      });
-
-                      if (mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DetayEkrani(bahceVerisi: bahce),
+                        child: Icon(
+                          isDolu ? Icons.lock_outline : Icons.yard_outlined, 
+                          size: 30,
+                          color: isDolu ? Colors.grey : Colors.green,
+                        ),
+                      ),
+                      title: Text(
+                        baslik, 
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 18,
+                          decoration: isDolu ? TextDecoration.lineThrough : null, // Doluysa üstünü çiz
+                        )
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: Text("$konum\nAylık: $fiyat TL", style: const TextStyle(height: 1.4)),
+                      ),
+                      isThreeLine: true,
+                      trailing: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            isDolu ? Icons.not_interested : Icons.arrow_forward_ios, 
+                            size: 14, 
+                            color: Colors.grey
                           ),
-                        );
-                      }
-                    },
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isDolu ? Colors.red.shade400 : Colors.green,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text(
+                              durum,
+                              style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                      onTap: () async {
+                        // --- SAVUNMACI KONTROL ---
+                        if (isDolu) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Bu bahçe şu an doludur, detaylara erişilemez."),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                          return; // Fonksiyondan çık, sayfaya gitme
+                        }
+
+                        // Eğer boşsa logla ve detaya git
+                        await Supabase.instance.client.from('loglar').insert({
+                          'kullanici_id': _userUID,
+                          'islem': "$baslik bahçesinin detaylarına bakıldı.",
+                        });
+
+                        if (mounted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DetayEkrani(bahceVerisi: bahce),
+                            ),
+                          );
+                        }
+                      },
+                    ),
                   ),
                 );
               },

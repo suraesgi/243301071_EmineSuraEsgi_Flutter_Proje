@@ -25,15 +25,13 @@ class _GirisEkraniState extends State<GirisEkrani> {
     setState(() => _yukleniyor = true);
 
     try {
-      // 1. ADIM: Supabase Auth ile Kimlik Doğrulama
       final AuthResponse res = await Supabase.instance.client.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _sifreController.text.trim(),
       );
 
       if (res.user != null) {
-        // 2. ADIM: Kullanıcı Verilerini ve Rolü Veritabanından Çek
-        // Kayıt ekranında manuel eklediğimiz 'kullanicilar' tablosuna gidiyoruz.
+
         final userData = await Supabase.instance.client
             .from('kullanicilar')
             .select('rol, ad, soyad') 
@@ -43,8 +41,6 @@ class _GirisEkraniState extends State<GirisEkrani> {
         String gelenRol = userData['rol'];
         String tamAd = "${userData['ad']} ${userData['soyad']}";
 
-        // 3. ADIM: Log Kaydı (Ödev Şartı!)
-        // Her girişte veritabanına log düşüyoruz.
         await Supabase.instance.client.from('loglar').insert({
           'kullanici_id': res.user!.id,
           'islem': "Başarılı Giriş yapıldı. Kullanıcı: $tamAd, Rol: $gelenRol",
@@ -53,8 +49,6 @@ class _GirisEkraniState extends State<GirisEkrani> {
         if (mounted) {
           _mesajGoster("Hoş geldiniz, $tamAd", Colors.green);
           
-          // 4. ADIM: Role Göre Yönlendirme
-          // Navigator.pushReplacement kullanarak geri dönülmesini engelliyoruz.
           Navigator.pushReplacement(
             context, 
             MaterialPageRoute(
@@ -74,7 +68,6 @@ class _GirisEkraniState extends State<GirisEkrani> {
       }
       _mesajGoster(mesaj, Colors.red);
     } catch (error) {
-      // Eğer kullanıcı Auth'da var ama 'kullanicilar' tablosunda yoksa buraya düşer.
       _mesajGoster("Kullanıcı profili bulunamadı. Lütfen tekrar kayıt olun.", Colors.red);
       debugPrint("Giriş Hatası Detayı: $error");
     } finally {
@@ -116,11 +109,11 @@ class _GirisEkraniState extends State<GirisEkrani> {
                   const Icon(Icons.local_florist, size: 100, color: Colors.green),
                   const SizedBox(height: 20),
                   const Text(
-                    "Hobi Bahçesi",
+                    "Hobi Bahçesi Kiralama Sistemi",
                     style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.green),
                   ),
                   const Text(
-                    "Yönetim Sistemine Giriş",
+                    "Kiralama ve Yönetim Sistemine Giriş",
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                   const SizedBox(height: 40),
