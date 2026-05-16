@@ -100,8 +100,6 @@ class _ProfilEkraniState extends State<ProfilEkrani> {
           final data = snapshot.data!;
           final bilgiler = data['bilgiler'];
           final hareketler = data['hareketler'] as List;
-          final kiralikBahceler = data['kiralikBahceler'] as List;
-
           final String tamAd = "${bilgiler['ad'] ?? ''} ${bilgiler['soyad'] ?? ''}";
           final String rol = bilgiler['rol'] ?? "Müşteri";
 
@@ -138,7 +136,6 @@ class _ProfilEkraniState extends State<ProfilEkrani> {
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     children: [
-                      // 1. İLETİŞİM BİLGİLERİ GRUBU
                       _bilgiGrubu("İletişim Bilgileri", [
                         _bilgiSatiri(Icons.email_outlined, "E-posta", bilgiler['eposta'] ?? ""),
                         _bilgiSatiri(Icons.phone_android, "Telefon", bilgiler['telefon'] ?? "Belirtilmemiş"),
@@ -147,8 +144,6 @@ class _ProfilEkraniState extends State<ProfilEkrani> {
                       ]),
 
                       const SizedBox(height: 25),
-
-                      // 2. DİNAMİK İŞLEMLER GRUBU (ROL BAZLI)
                       _bilgiGrubu(rol == "Bahçe Sahibi" ? "Sahip İşlemleri" : "Kiralama İşlemleri", [
                         if (rol == "Bahçe Sahibi")
                           _profilButonu(
@@ -178,7 +173,6 @@ class _ProfilEkraniState extends State<ProfilEkrani> {
                             renk: Colors.blue.shade700,
                           ),
                       ]),
-
                       const SizedBox(height: 25), 
 
                       _bilgiGrubu("Son Hareketlerim (Log Kaydı)", [
