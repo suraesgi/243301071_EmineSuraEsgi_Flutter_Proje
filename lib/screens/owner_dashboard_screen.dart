@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'profile_screen.dart';
+import 'bahce_ekle_screen.dart';
 
 class SahipPaneli extends StatefulWidget {
   const SahipPaneli({super.key});
@@ -89,7 +90,6 @@ class _SahipPaneliState extends State<SahipPaneli> {
           final data = snapshot.data!;
           final List bahceler = data['bahceListesi'];
           
-          // Durum sayılarını hesapla
           final doluSayisi = bahceler.where((b) => b['durum'] == 'Dolu').length;
           final bosSayisi = bahceler.where((b) => b['durum'] == 'Boş').length;
 
@@ -101,7 +101,6 @@ class _SahipPaneliState extends State<SahipPaneli> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- ÖZET BÖLÜMÜ ---
                   const Text("Genel Durum", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   SingleChildScrollView(
@@ -118,7 +117,6 @@ class _SahipPaneliState extends State<SahipPaneli> {
 
                   const SizedBox(height: 32),
                   
-                  // --- BAHÇELER LİSTESİ ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -149,7 +147,6 @@ class _SahipPaneliState extends State<SahipPaneli> {
                           ),
                           child: Column(
                             children: [
-                              // Kartın Üst Kısmı (Durum Çubuğu)
                               Container(
                                 height: 8,
                                 decoration: BoxDecoration(
@@ -168,7 +165,7 @@ class _SahipPaneliState extends State<SahipPaneli> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const SizedBox(height: 4),
-                                    Text("${bahce['konum']} • ${bahce['metrekare']} m²", style: const TextStyle(color: Colors.grey)),
+                                    Text("${bahce['konum']} • ${bahce['metrekare'] ?? '0'} m²", style: const TextStyle(color: Colors.grey)),
                                     const SizedBox(height: 4),
                                     Text("${bahce['fiyat']} TL / Ay", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
                                   ],
@@ -196,7 +193,7 @@ class _SahipPaneliState extends State<SahipPaneli> {
                                     ),
                                     const SizedBox(width: 8),
                                     ElevatedButton(
-                                      onPressed: () { /* Düzenleme ekranı */ },
+                                      onPressed: () { },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.green.shade700,
                                         foregroundColor: Colors.white,
@@ -219,7 +216,15 @@ class _SahipPaneliState extends State<SahipPaneli> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _mesajGoster("Form modülü hazırlanıyor..."),
+        onPressed: () async {
+          final sonuc = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const BahceEkleEkrani()),
+          );
+          if (sonuc == true) {
+            setState(() {});
+          }
+        },
         label: const Text("Yeni Bahçe", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         icon: const Icon(Icons.add, color: Colors.white),
         backgroundColor: Colors.green.shade900,

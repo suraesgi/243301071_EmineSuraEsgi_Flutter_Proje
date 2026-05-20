@@ -36,15 +36,15 @@ class _DetayEkraniState extends State<DetayEkrani> {
       if (secilenHizmetler.isNotEmpty) {
         for (var hizmet in secilenHizmetler) {
           await Supabase.instance.client.from('musteri_hizmetleri').insert({
-  'musteri_id': user.id,
-  'bahce_id': widget.bahceVerisi['id'] ?? widget.bahceVerisi['bahce_id'], 
-  'hizmet_id': hizmet['id'],
-});
+            'musteri_id': user.id,
+            'bahce_id': widget.bahceVerisi['id'] ?? widget.bahceVerisi['bahce_id'],
+            'hizmet_id': hizmet['id'],
+          });
         }
       }
 
       String hizmetNotu = secilenHizmetler.map((e) => e['hizmet_adi']).join(", ");
-      String islemMesaji = "KİRALANDI: ${widget.bahceVerisi['baslik']} | Toplam: $toplamOdeme TL";
+      String islemMesaji = "KİRANDI: ${widget.bahceVerisi['baslik']} | Toplam: $toplamOdeme TL";
       if (hizmetNotu.isNotEmpty) islemMesaji += " | Hizmetler: $hizmetNotu";
 
       await Supabase.instance.client.from('loglar').insert({
@@ -53,7 +53,7 @@ class _DetayEkraniState extends State<DetayEkrani> {
       });
 
       if (context.mounted) {
-        Navigator.pop(context); 
+        Navigator.pop(context);
         _basariDiyaloguGoster(context, widget.bahceVerisi['baslik'], toplamOdeme);
       }
     } catch (e) {
@@ -79,8 +79,8 @@ class _DetayEkraniState extends State<DetayEkrani> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); 
-              Navigator.pop(context); 
+              Navigator.pop(context);
+              Navigator.pop(context);
             },
             child: const Text("TAMAM", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
           ),
@@ -106,7 +106,6 @@ class _DetayEkraniState extends State<DetayEkrani> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _ustGorsel(b),
-
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -115,24 +114,17 @@ class _DetayEkraniState extends State<DetayEkrani> {
                   Text(b['baslik'] ?? "", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
                   Text(b['konum'] ?? "", style: const TextStyle(color: Colors.grey)),
-                  
                   const Divider(height: 40),
-
                   const Text("Bu Bahçede Neler Yetişir?", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  _yatisenUrunlerWidget(b['id']),
-
+                  _yatisenUrunlerWidget(),
                   const Divider(height: 40),
-
                   const Text("Ek Hizmet Alın", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   _ekHizmetlerWidget(),
-
                   const Divider(height: 40),
-
                   _fiyatKarti(genelToplam),
                   const SizedBox(height: 20),
-                  
                   ElevatedButton(
                     onPressed: b['durum'] == "Boş" ? () => _kiralamaTalebiOlustur(context) : null,
                     style: ElevatedButton.styleFrom(
@@ -161,7 +153,9 @@ class _DetayEkraniState extends State<DetayEkrani> {
           decoration: BoxDecoration(
             color: Colors.green.shade50,
             image: const DecorationImage(
-              image: NetworkImage("https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?q=80&w=1000&auto=format&fit=crop"),
+              image: NetworkImage(
+                "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?q=80&w=1000&auto=format&fit=crop",
+              ),
               fit: BoxFit.cover,
             ),
           ),
@@ -203,29 +197,24 @@ class _DetayEkraniState extends State<DetayEkrani> {
     );
   }
 
-  Widget _yatisenUrunlerWidget(int bahceId) {
-    return FutureBuilder(
-      future: Supabase.instance.client
-          .from('bahce_urunleri')
-          .select('*, urunler(urun_adi)')
-          .eq('bahce_id', bahceId),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const LinearProgressIndicator();
-        final urunler = snapshot.data as List;
-        if (urunler.isEmpty) return const Text("Ürün bilgisi bulunamadı.", style: TextStyle(color: Colors.grey));
+  Widget _yatisenUrunlerWidget() {
+    final dynamic urunlerHam = widget.bahceVerisi['urunler'];
+    final List<String> urunler = urunlerHam != null ? List<String>.from(urunlerHam) : [];
 
-        return Wrap(
-          spacing: 8,
-          children: urunler.map((u) {
-            final urunAdi = u['urunler']['urun_adi'] ?? "Bilinmiyor";
-            return Chip(
-              label: Text(urunAdi),
-              avatar: const Icon(Icons.eco, size: 16, color: Colors.green),
-              backgroundColor: Colors.green.shade50,
-            );
-          }).toList(),
+    if (urunler.isEmpty) {
+      return const Text("Ürün bilgisi bulunamadı.", style: TextStyle(color: Colors.grey));
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: urunler.map((urunAdi) {
+        return Chip(
+          label: Text(urunAdi),
+          avatar: const Icon(Icons.eco, size: 16, color: Colors.green),
+          backgroundColor: Colors.green.shade50,
         );
-      },
+      }).toList(),
     );
   }
 
